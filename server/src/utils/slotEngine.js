@@ -1,176 +1,240 @@
 // ============================================
-// RITSINO — Slot Engine (6×5 Scatter Pays)
+// RITSINO — Slot Engine (7×4 Cluster Pays + Scatter Bonus)
 // ============================================
 
-// Symbol definitions with weights and payouts
 const SYMBOLS = [
-  { id: 1, name: 'symbol_1', rarity: 'common', weight: 25 },
-  { id: 2, name: 'symbol_2', rarity: 'common', weight: 25 },
-  { id: 3, name: 'symbol_3', rarity: 'uncommon', weight: 12 },
-  { id: 4, name: 'symbol_4', rarity: 'uncommon', weight: 12 },
-  { id: 5, name: 'symbol_5', rarity: 'rare', weight: 6 },
-  { id: 6, name: 'symbol_6', rarity: 'rare', weight: 6 },
-  { id: 7, name: 'symbol_7', rarity: 'epic', weight: 4 },
-  { id: 8, name: 'symbol_8', rarity: 'legendary', weight: 2 },
-  { id: 9, name: 'scatter', rarity: 'scatter', weight: 1 },
+  { id: 1,  name: 'symbol_1',  rarity: 'common', weight: 20 },
+  { id: 2,  name: 'symbol_2',  rarity: 'common', weight: 20 },
+  { id: 3,  name: 'symbol_3',  rarity: 'common', weight: 18 },
+  { id: 4,  name: 'symbol_4',  rarity: 'common', weight: 18 },
+  { id: 5,  name: 'symbol_5',  rarity: 'uncommon', weight: 6 },
+  { id: 6,  name: 'symbol_6',  rarity: 'uncommon', weight: 6 },
+  { id: 7,  name: 'symbol_7',  rarity: 'uncommon', weight: 5 },
+  { id: 8,  name: 'symbol_8',  rarity: 'rare', weight: 3 },
+  { id: 9,  name: 'symbol_9',  rarity: 'rare', weight: 3 },
+  { id: 10, name: 'symbol_10', rarity: 'epic', weight: 2 },
+  { id: 11, name: 'symbol_11', rarity: 'epic', weight: 2 },
+  { id: 12, name: 'symbol_12', rarity: 'legendary', weight: 1 },
+  { id: 13, name: 'scatter',   rarity: 'scatter', weight: 2 },
 ];
 
-// Payout table: { minCount: multiplier }
 const PAYOUTS = {
-  common:    { 5: 0.5, 8: 1, 12: 2 },
-  uncommon:  { 5: 1,   8: 2, 12: 4 },
-  rare:      { 5: 2,   8: 4, 12: 8 },
-  epic:      { 5: 5,   8: 10, 12: 25 },
-  legendary: { 5: 10,  8: 25, 12: 50 },
-  scatter:   { 3: 5,   4: 20, 5: 50, 6: 100 },
+  common:    { 4: 0.2, 6: 0.5, 8: 1,  12: 2.5 },
+  uncommon:  { 4: 0.5, 6: 1,   8: 2.5, 12: 6 },
+  rare:      { 4: 1,   6: 3,   8: 6,   12: 15 },
+  epic:      { 4: 3,   6: 8,   8: 15,  12: 40 },
+  legendary: { 4: 5,   6: 15,  8: 30,  12: 60 },
+  scatter:   { 3: 5,   4: 20,  5: 50 },
 };
 
-const GRID_COLS = 6;
-const GRID_ROWS = 5;
+const GRID_COLS = 7;
+const GRID_ROWS = 4;
+const TOTAL_WEIGHT = SYMBOLS.reduce((s, sym) => s + sym.weight, 0);
 
-// Total weight for weighted random selection
-const TOTAL_WEIGHT = SYMBOLS.reduce((sum, s) => sum + s.weight, 0);
+// === BONUS CONFIG ===
+const BONUS_CELLS = [
+  { type: 'points', mult: 0.1, weight: 22 },
+  { type: 'points', mult: 0.2, weight: 18 },
+  { type: 'points', mult: 0.5, weight: 10 },
+  { type: 'points', mult: 1,   weight: 5 },
+  { type: 'points', mult: 2,   weight: 2 },
+  { type: 'points', mult: 5,   weight: 1 },
+  { type: 'marmot', weight: 3 },
+  { type: 'empty',  weight: 30 },
+];
+const BONUS_TOTAL_W = BONUS_CELLS.reduce((s, c) => s + c.weight, 0);
 
-/**
- * Pick a random symbol based on weights
- */
-function pickRandomSymbol() {
-  let random = Math.random() * TOTAL_WEIGHT;
-  for (const symbol of SYMBOLS) {
-    random -= symbol.weight;
-    if (random <= 0) return symbol;
-  }
-  return SYMBOLS[0]; // fallback
+function pickSymbol() {
+  let r = Math.random() * TOTAL_WEIGHT;
+  for (const s of SYMBOLS) { r -= s.weight; if (r <= 0) return s; }
+  return SYMBOLS[0];
 }
 
-/**
- * Generate a 6×5 grid of random symbols
- * Returns a 2D array: grid[col][row]
- */
 function generateGrid() {
   const grid = [];
-  for (let col = 0; col < GRID_COLS; col++) {
-    const column = [];
-    for (let row = 0; row < GRID_ROWS; row++) {
-      column.push(pickRandomSymbol());
+  for (let c = 0; c < GRID_COLS; c++) {
+    const col = [];
+    for (let r = 0; r < GRID_ROWS; r++) {
+      col.push(r > 0 && Math.random() < 0.30 ? col[r - 1] : pickSymbol());
     }
-    grid.push(column);
+    grid.push(col);
   }
+  for (let c = 1; c < GRID_COLS; c++)
+    for (let r = 0; r < GRID_ROWS; r++)
+      if (Math.random() < 0.15) grid[c][r] = grid[c - 1][r];
   return grid;
 }
 
-/**
- * Count occurrences of each symbol in the grid
- */
-function countSymbols(grid) {
-  const counts = {};
-  for (let col = 0; col < GRID_COLS; col++) {
-    for (let row = 0; row < GRID_ROWS; row++) {
-      const sym = grid[col][row];
-      counts[sym.id] = (counts[sym.id] || 0) + 1;
-    }
-  }
-  return counts;
-}
-
-/**
- * Get the positions of matching symbols in the grid
- */
-function getWinningPositions(grid, symbolId) {
-  const positions = [];
-  for (let col = 0; col < GRID_COLS; col++) {
-    for (let row = 0; row < GRID_ROWS; row++) {
-      if (grid[col][row].id === symbolId) {
-        positions.push({ col, row });
+function findClusters(grid) {
+  const vis = Array.from({ length: GRID_COLS }, () => Array(GRID_ROWS).fill(false));
+  const clusters = [];
+  for (let c = 0; c < GRID_COLS; c++) {
+    for (let r = 0; r < GRID_ROWS; r++) {
+      if (vis[c][r]) continue;
+      const sid = grid[c][r].id;
+      const pos = [];
+      const q = [{ col: c, row: r }];
+      vis[c][r] = true;
+      while (q.length) {
+        const cur = q.shift();
+        pos.push(cur);
+        for (const [dc, dr] of [[0,-1],[0,1],[-1,0],[1,0]]) {
+          const nc = cur.col + dc, nr = cur.row + dr;
+          if (nc >= 0 && nc < GRID_COLS && nr >= 0 && nr < GRID_ROWS && !vis[nc][nr] && grid[nc][nr].id === sid) {
+            vis[nc][nr] = true;
+            q.push({ col: nc, row: nr });
+          }
+        }
       }
+      clusters.push({ symbolId: sid, positions: pos });
     }
   }
-  return positions;
+  return clusters;
 }
 
-/**
- * Calculate the payout multiplier for a symbol count
- */
 function getMultiplier(rarity, count) {
-  const payoutTiers = PAYOUTS[rarity];
-  if (!payoutTiers) return 0;
-
-  let multiplier = 0;
-  const thresholds = Object.keys(payoutTiers)
-    .map(Number)
-    .sort((a, b) => b - a); // descending
-
-  for (const threshold of thresholds) {
-    if (count >= threshold) {
-      multiplier = payoutTiers[threshold];
-      break;
-    }
-  }
-  return multiplier;
+  const tiers = PAYOUTS[rarity];
+  if (!tiers) return 0;
+  for (const t of Object.keys(tiers).map(Number).sort((a, b) => b - a))
+    if (count >= t) return tiers[t];
+  return 0;
 }
 
-/**
- * Evaluate the grid and calculate total win
- * @param {Array} grid - 6×5 grid of symbols
- * @param {number} betAmount - Amount bet
- * @returns {Object} - { totalWin, wins: [{symbolId, symbolName, count, multiplier, winAmount, positions}] }
- */
+function countScatters(grid) {
+  let count = 0; const pos = [];
+  for (let c = 0; c < GRID_COLS; c++)
+    for (let r = 0; r < GRID_ROWS; r++)
+      if (grid[c][r].rarity === 'scatter') { count++; pos.push({ col: c, row: r }); }
+  return { count, positions: pos };
+}
+
 function evaluateGrid(grid, betAmount) {
-  const counts = countSymbols(grid);
-  const wins = [];
-  let totalWin = 0;
-
-  for (const [symbolIdStr, count] of Object.entries(counts)) {
-    const symbolId = parseInt(symbolIdStr);
-    const symbol = SYMBOLS.find(s => s.id === symbolId);
-    if (!symbol) continue;
-
-    const multiplier = getMultiplier(symbol.rarity, count);
-    if (multiplier > 0) {
-      const winAmount = Math.round(betAmount * multiplier);
-      const positions = getWinningPositions(grid, symbolId);
-      wins.push({
-        symbolId: symbol.id,
-        symbolName: symbol.name,
-        rarity: symbol.rarity,
-        count,
-        multiplier,
-        winAmount,
-        positions,
-      });
-      totalWin += winAmount;
+  const wins = []; let totalWin = 0;
+  for (const cl of findClusters(grid)) {
+    const sym = SYMBOLS.find(s => s.id === cl.symbolId);
+    if (!sym || sym.rarity === 'scatter') continue;
+    const m = getMultiplier(sym.rarity, cl.positions.length);
+    if (m > 0) {
+      const w = Math.round(betAmount * m);
+      wins.push({ symbolId: sym.id, symbolName: sym.name, rarity: sym.rarity, count: cl.positions.length, multiplier: m, winAmount: w, positions: cl.positions });
+      totalWin += w;
     }
   }
-
+  const sc = countScatters(grid);
+  if (sc.count >= 3) {
+    const ss = SYMBOLS.find(s => s.rarity === 'scatter');
+    const m = getMultiplier('scatter', sc.count);
+    if (m > 0) { const w = Math.round(betAmount * m); wins.push({ symbolId: ss.id, symbolName: ss.name, rarity: 'scatter', count: sc.count, multiplier: m, winAmount: w, positions: sc.positions }); totalWin += w; }
+  }
   return { totalWin, wins };
 }
 
-/**
- * Execute a full spin
- * @param {number} betAmount - Amount bet
- * @returns {Object} - Full spin result
- */
-function spin(betAmount) {
-  const grid = generateGrid();
-
-  // Convert grid to serializable format (just IDs)
-  const gridData = grid.map(col => col.map(sym => sym.id));
-
-  const { totalWin, wins } = evaluateGrid(grid, betAmount);
-
-  return {
-    grid: gridData,
-    totalWin,
-    wins,
-    betAmount,
-    isWin: totalWin > 0,
-  };
+// === BONUS SPIN GENERATION ===
+function pickBonusCell(betAmount) {
+  let r = Math.random() * BONUS_TOTAL_W;
+  for (const bc of BONUS_CELLS) {
+    r -= bc.weight;
+    if (r <= 0) {
+      if (bc.type === 'points') return { type: 'points', value: Math.round(betAmount * bc.mult) };
+      if (bc.type === 'marmot') return { type: 'marmot' };
+      return { type: 'empty', displayId: Math.ceil(Math.random() * 12) };
+    }
+  }
+  return { type: 'empty', displayId: 1 };
 }
 
-module.exports = {
-  spin,
-  SYMBOLS,
-  PAYOUTS,
-  GRID_COLS,
-  GRID_ROWS,
-};
+function generateBonusGrid(betAmount) {
+  const grid = [];
+  for (let c = 0; c < GRID_COLS; c++) {
+    const col = [];
+    for (let r = 0; r < GRID_ROWS; r++) {
+      if (r > 0 && col[r - 1].type === 'points' && Math.random() < 0.35) {
+        col.push({ ...col[r - 1] });
+      } else {
+        col.push(pickBonusCell(betAmount));
+      }
+    }
+    grid.push(col);
+  }
+  for (let c = 1; c < GRID_COLS; c++)
+    for (let r = 0; r < GRID_ROWS; r++)
+      if (grid[c - 1][r].type === 'points' && Math.random() < 0.2)
+        grid[c][r] = { ...grid[c - 1][r] };
+  return grid;
+}
+
+function evaluateBonusGrid(grid, phase) {
+  let totalPts = 0, marmots = 0;
+  const marmotPos = [], pointPos = [];
+  for (let c = 0; c < GRID_COLS; c++)
+    for (let r = 0; r < GRID_ROWS; r++) {
+      const cell = grid[c][r];
+      if (cell.type === 'points') { totalPts += cell.value; pointPos.push({ col: c, row: r }); }
+      else if (cell.type === 'marmot') { marmots++; marmotPos.push({ col: c, row: r }); }
+    }
+  let spinWin = 0;
+  const winPos = [];
+  if (marmots > 0) {
+    const phaseMult = phase + 1;
+    spinWin = totalPts * Math.pow(phaseMult, marmots);
+    winPos.push(...pointPos, ...marmotPos);
+  } else {
+    // Only clustered points pay
+    const vis = Array.from({ length: GRID_COLS }, () => Array(GRID_ROWS).fill(false));
+    for (let c = 0; c < GRID_COLS; c++)
+      for (let r = 0; r < GRID_ROWS; r++) {
+        if (vis[c][r] || grid[c][r].type !== 'points') { vis[c][r] = true; continue; }
+        const pos = []; let val = 0;
+        const q = [{ col: c, row: r }]; vis[c][r] = true;
+        while (q.length) {
+          const cur = q.shift(); pos.push(cur);
+          val += grid[cur.col][cur.row].value;
+          for (const [dc, dr] of [[0,-1],[0,1],[-1,0],[1,0]]) {
+            const nc = cur.col + dc, nr = cur.row + dr;
+            if (nc >= 0 && nc < GRID_COLS && nr >= 0 && nr < GRID_ROWS && !vis[nc][nr] && grid[nc][nr].type === 'points') {
+              vis[nc][nr] = true; q.push({ col: nc, row: nr });
+            }
+          }
+        }
+        if (pos.length >= 4) { spinWin += val; winPos.push(...pos); }
+      }
+  }
+  return { spinWin: Math.round(spinWin), marmotCount: marmots, totalScreenPoints: totalPts, winningPositions: winPos, marmotPositions: marmotPos };
+}
+
+function generateBonusSequence(betAmount) {
+  let phase = 1, spinsLeft = 10, phaseMarmots = 0, totalBonusWin = 0;
+  const spins = [];
+  while (spinsLeft > 0) {
+    spinsLeft--;
+    const grid = generateBonusGrid(betAmount);
+    const ev = evaluateBonusGrid(grid, phase);
+    totalBonusWin += ev.spinWin;
+    phaseMarmots += ev.marmotCount;
+    const spinData = { grid, ...ev, phase, phaseMarmots, spinsLeft, totalBonusWin, phaseUp: false };
+    if (phaseMarmots >= 4 && phase < 4) {
+      phase++; phaseMarmots = 0; spinsLeft += 10;
+      spinData.phaseUp = true; spinData.newPhase = phase; spinData.spinsLeft = spinsLeft;
+    }
+    spins.push(spinData);
+  }
+  return { bonusSpins: spins, totalBonusWin };
+}
+
+function spin(betAmount) {
+  const grid = generateGrid();
+  const gridData = grid.map(col => col.map(s => s.id));
+  const { totalWin, wins } = evaluateGrid(grid, betAmount);
+  const sc = countScatters(grid);
+  const bonusTriggered = sc.count >= 3;
+  const result = { grid: gridData, totalWin, wins, betAmount, isWin: totalWin > 0, bonusTriggered };
+  if (bonusTriggered) {
+    const bonus = generateBonusSequence(betAmount);
+    result.bonusSpins = bonus.bonusSpins;
+    result.totalBonusWin = bonus.totalBonusWin;
+    result.totalWin += bonus.totalBonusWin;
+  }
+  return result;
+}
+
+module.exports = { spin, SYMBOLS, PAYOUTS, GRID_COLS, GRID_ROWS };
