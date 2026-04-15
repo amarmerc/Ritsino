@@ -8,10 +8,10 @@
 }
 
 .slot-machine {
-  background: linear-gradient(180deg, #1a1040 0%, #0d0820 100%);
-  border: 2px solid rgba(218, 39, 36, 0.3); border-radius: var(--radius-xl);
-  padding: 16px; box-shadow: 0 0 30px rgba(240,192,64,0.15), inset 0 0 60px rgba(0,0,0,0.5);
-  position: relative; overflow: hidden; width: 100%; max-width: min(92vw, 850px);
+  background: var(--gradient-card);
+  border: 2px solid var(--accent-gold-dim); border-radius: var(--radius-xl);
+  padding: 16px; box-shadow: 0 0 30px rgba(0,0,0,0.1), inset 0 0 60px rgba(0,0,0,0.2);
+  position: relative; overflow: hidden; width: 100%; max-width: min(96vw, 1100px);
 }
 .slot-machine.bonus-active {
   border-color: rgba(168, 85, 247, 0.6);
@@ -29,13 +29,13 @@
 
 .slot-grid {
   display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
-  position: relative; z-index: 1; background: rgba(0,0,0,0.4);
+  position: relative; z-index: 1; background: var(--bg-glass);
   border-radius: var(--radius-md); padding: 6px;
 }
 
 .slot-cell {
   aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  background: var(--bg-card-hover); border: 1px solid rgba(150, 150, 150, 0.2);
   border-radius: var(--radius-sm); transition: all 0.3s ease; position: relative; overflow: hidden;
 }
 .slot-cell.winning {
@@ -61,6 +61,10 @@
   font-size: clamp(1.1rem, 4.5vw, 2.5rem); line-height: 1;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
 }
+.slot-cell .symbol-image {
+  width: 85%; height: 85%; object-fit: contain;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+}
 
 /* Bonus cell styles */
 .bonus-cell-points {
@@ -84,7 +88,7 @@
 /* Controls */
 .slot-controls {
   display: flex; align-items: center; justify-content: center;
-  gap: 14px; flex-wrap: wrap; width: 100%; max-width: min(92vw, 850px);
+  gap: 14px; flex-wrap: wrap; width: 100%; max-width: min(96vw, 1100px);
 }
 .bet-selector { display: flex; align-items: center; gap: 8px; }
 .bet-label { color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -143,7 +147,8 @@
 /* Win display */
 .win-display {
   text-align: center; padding: 10px 16px; border-radius: var(--radius-lg);
-  animation: slideUp 0.3s ease; width: 100%; max-width: min(92vw, 850px);
+  width: 100%; max-width: min(96vw, 1100px);
+  min-height: 85px; display: flex; flex-direction: column; justify-content: center; align-items: center;
 }
 .win-display.win { background: linear-gradient(135deg, rgba(240,192,64,0.15), rgba(168,85,247,0.1)); border: 1px solid rgba(240,192,64,0.3); }
 .win-display.lose { background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); }
@@ -206,7 +211,7 @@
 /* Points bar */
 .points-bar {
   display: flex; align-items: center; justify-content: space-between;
-  width: 100%; max-width: min(92vw, 850px); padding: 8px 20px;
+  width: 100%; max-width: min(96vw, 1100px); padding: 8px 20px;
   background: var(--gradient-card); border: 1px solid var(--border-glass); border-radius: var(--radius-lg);
 }
 .points-bar-left { display: flex; align-items: center; gap: 10px; }

@@ -40,6 +40,9 @@ function AppContent() {
           {currentPage === 'profile' && <Profile />}
         </div>
       </main>
+      <footer style={{ textAlign: 'center', padding: '10px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+        © <a href="https://amarmer.es/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 'bold' }}>amarmer</a>
+      </footer>
     </>
   );
 }

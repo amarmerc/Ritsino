@@ -32,13 +32,13 @@ const TOTAL_WEIGHT = SYMBOLS.reduce((s, sym) => s + sym.weight, 0);
 
 // === BONUS CONFIG ===
 const BONUS_CELLS = [
-  { type: 'points', mult: 0.1, weight: 8 },
-  { type: 'points', mult: 0.2, weight: 5 },
-  { type: 'points', mult: 0.5, weight: 3 },
-  { type: 'points', mult: 1,   weight: 2 },
-  { type: 'points', mult: 2,   weight: 1 },
+  { type: 'points', mult: 0.1, weight: 3 },
+  { type: 'points', mult: 0.2, weight: 2 },
+  { type: 'points', mult: 0.5, weight: 1 },
+  { type: 'points', mult: 1,   weight: 1 },
+  { type: 'points', mult: 2,   weight: 0.5 },
   { type: 'mocion', weight: 2 },
-  { type: 'empty',  weight: 75 },
+  { type: 'empty',  weight: 150 },
 ];
 const BONUS_TOTAL_W = BONUS_CELLS.reduce((s, c) => s + c.weight, 0);
 
@@ -151,14 +151,20 @@ function generateBonusGrid(betAmount) {
 
 function evaluateBonusGrid(grid, phase) {
   let mociones = 0;
+  let totalScreenPts = 0;
   const mocionPos = [];
-  for (let c = 0; c < GRID_COLS; c++)
-    for (let r = 0; r < GRID_ROWS; r++)
+  const allPointsPos = [];
+
+  for (let c = 0; c < GRID_COLS; c++) {
+    for (let r = 0; r < GRID_ROWS; r++) {
       if (grid[c][r].type === 'mocion') { mociones++; mocionPos.push({ col: c, row: r }); }
+      else if (grid[c][r].type === 'points') { totalScreenPts += grid[c][r].value; allPointsPos.push({ col: c, row: r }); }
+    }
+  }
 
   // Always find clustered points first (min 4 adjacent)
   let clusteredPts = 0;
-  const winPos = [];
+  const clusteredPos = [];
   const vis = Array.from({ length: GRID_COLS }, () => Array(GRID_ROWS).fill(false));
   for (let c = 0; c < GRID_COLS; c++)
     for (let r = 0; r < GRID_ROWS; r++) {
@@ -175,20 +181,25 @@ function evaluateBonusGrid(grid, phase) {
           }
         }
       }
-      if (pos.length >= 4) { clusteredPts += val; winPos.push(...pos); }
+      if (pos.length >= 4) { clusteredPts += val; clusteredPos.push(...pos); }
     }
 
-  let spinWin = clusteredPts;
-  // Mocion multiplies only the clustered points (additive, not exponential)
-  if (mociones > 0 && clusteredPts > 0) {
+  let spinWin = 0;
+  const winPos = [];
+
+  if (mociones > 0 && totalScreenPts > 0) {
     const phaseMult = phase + 1; // phase 1→×2, 2→×3, etc.
-    spinWin = clusteredPts * phaseMult * mociones;
-    winPos.push(...mocionPos);
+    spinWin = totalScreenPts * Math.pow(phaseMult, mociones);
+    winPos.push(...allPointsPos, ...mocionPos);
   } else if (mociones > 0) {
     // Mocion but no clusters — no points to collect
     winPos.push(...mocionPos);
+  } else if (clusteredPts > 0) {
+    spinWin = clusteredPts;
+    winPos.push(...clusteredPos);
   }
-  return { spinWin: Math.round(spinWin), mocionCount: mociones, totalScreenPoints: clusteredPts, winningPositions: winPos, mocionPositions: mocionPos };
+  
+  return { spinWin: Math.round(spinWin), mocionCount: mociones, totalScreenPoints: totalScreenPts, winningPositions: winPos, mocionPositions: mocionPos };
 }
 
 function generateBonusSequence(betAmount) {

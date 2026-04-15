@@ -1,8 +1,19 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import './Layout.css';
 
 export default function Navbar({ currentPage, onPageChange }) {
   const { user, logout } = useAuth();
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   const pages = [
     { id: 'game', label: '🎰 Jugar' },
@@ -40,6 +51,9 @@ export default function Navbar({ currentPage, onPageChange }) {
                 {user?.university?.acronym}
               </span>
             </div>
+            <button className="theme-toggle" onClick={toggleTheme} style={{ background: 'transparent', fontSize: '1.2rem', marginRight: '8px', cursor: 'pointer' }} title="Cambiar tema">
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
             <button className="navbar-logout" onClick={logout}>
               Salir
             </button>
