@@ -73,7 +73,10 @@ export default function SlotMachine() {
         setResult(spinResult);
         setSpinning(false);
         spinningRef.current = false;
-        updatePoints(spinResult.newPoints);
+        
+        // Exclude the bonus win from the immediate balance update so it doesn't give away the total
+        const preBonusPoints = spinResult.newPoints - (spinResult.totalBonusWin || 0);
+        updatePoints(preBonusPoints);
 
         if (spinResult.totalWin >= betAmount * 3 && !spinResult.bonusTriggered) {
           setShowConfetti(true);
@@ -120,6 +123,7 @@ export default function SlotMachine() {
     if (bonusMode !== 'playing') return;
     if (bonusIndex >= bonusSpins.length) {
       setBonusMode('complete');
+      if (result) updatePoints(result.newPoints); // Apply the total final bonus points now
       return;
     }
     const timer = setTimeout(() => {
