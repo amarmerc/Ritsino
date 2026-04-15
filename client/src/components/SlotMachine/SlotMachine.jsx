@@ -371,7 +371,7 @@ export default function SlotMachine() {
           {currentBonusSpin.mocionCount > 0 && (
             <div className="win-details">
               ✊ ×{currentBonusSpin.mocionCount} moción{currentBonusSpin.mocionCount > 1 ? 'es' : ''} ·
-              {currentBonusSpin.totalScreenPoints} pts × {currentBonusSpin.phase + 1}^{currentBonusSpin.mocionCount}
+              {currentBonusSpin.totalScreenPoints} pts × {1 + (currentBonusSpin.mocionCount * currentBonusSpin.phase)}
             </div>
           )}
         </div>

@@ -32,13 +32,13 @@ const TOTAL_WEIGHT = SYMBOLS.reduce((s, sym) => s + sym.weight, 0);
 
 // === BONUS CONFIG ===
 const BONUS_CELLS = [
-  { type: 'points', mult: 0.1, weight: 3 },
-  { type: 'points', mult: 0.2, weight: 2 },
-  { type: 'points', mult: 0.5, weight: 1 },
-  { type: 'points', mult: 1,   weight: 1 },
-  { type: 'points', mult: 2,   weight: 0.5 },
+  { type: 'points', mult: 0.1, weight: 8 },
+  { type: 'points', mult: 0.2, weight: 5 },
+  { type: 'points', mult: 0.5, weight: 3 },
+  { type: 'points', mult: 1,   weight: 2 },
+  { type: 'points', mult: 2,   weight: 1 },
   { type: 'mocion', weight: 2 },
-  { type: 'empty',  weight: 150 },
+  { type: 'empty',  weight: 80 },
 ];
 const BONUS_TOTAL_W = BONUS_CELLS.reduce((s, c) => s + c.weight, 0);
 
@@ -188,8 +188,8 @@ function evaluateBonusGrid(grid, phase) {
   const winPos = [];
 
   if (mociones > 0 && totalScreenPts > 0) {
-    const phaseMult = phase + 1; // phase 1→×2, 2→×3, etc.
-    spinWin = totalScreenPts * Math.pow(phaseMult, mociones);
+    const finalMultiplier = 1 + (mociones * phase);
+    spinWin = totalScreenPts * finalMultiplier;
     winPos.push(...allPointsPos, ...mocionPos);
   } else if (mociones > 0) {
     // Mocion but no clusters — no points to collect
