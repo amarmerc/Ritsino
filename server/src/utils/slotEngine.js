@@ -37,7 +37,7 @@ const BONUS_CELLS = [
   { type: 'points', mult: 0.5, weight: 3 },
   { type: 'points', mult: 1,   weight: 2 },
   { type: 'points', mult: 2,   weight: 1 },
-  { type: 'mocion', weight: 2 },
+  { type: 'mocion', weight: 1.3 },
   { type: 'empty',  weight: 80 },
 ];
 const BONUS_TOTAL_W = BONUS_CELLS.reduce((s, c) => s + c.weight, 0);
