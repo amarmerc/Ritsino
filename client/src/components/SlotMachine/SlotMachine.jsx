@@ -383,7 +383,7 @@ export default function SlotMachine() {
 
       {/* Normal result display */}
       {!inBonus && (
-        <div className={`win-display ${result?.rescued ? 'rescue' : result?.isWin && !spinning ? 'win' : !result && !spinning ? 'lose' : 'lose'}`}>
+        <div className={`win-display ${result?.rescued ? 'rescue' : (result?.isWin || result?.postBonusDisplay) && !spinning ? 'win' : !result && !spinning ? 'lose' : 'lose'}`}>
           {result?.error ? (
             <div style={{ color: 'var(--accent-red)' }}>{result.error}</div>
           ) : result?.isWin && !spinning ? (
@@ -400,10 +400,17 @@ export default function SlotMachine() {
                   );
                 })}
               </div>
-              {result.bonusTriggered && <div className="rescue-message" style={{ animation: 'pulse 1.5s infinite' }}>🎰 ¡SCATTER BONUS activado!</div>}
+              {result.bonusTriggered && !result.postBonusDisplay && <div className="rescue-message" style={{ animation: 'pulse 1.5s infinite' }}>🎰 ¡SCATTER BONUS activado!</div>}
+              {result.postBonusDisplay && <div className="rescue-message" style={{ color: 'var(--accent-purple)', fontSize: '1rem', marginTop: '6px' }}>✊ Ganancia Moción: +{(result.totalBonusWin || 0).toLocaleString('es-ES')} puntos</div>}
             </>
           ) : result && !spinning ? (
-            <div className="win-details" style={{ color: 'var(--text-muted)' }}>Sin premio esta vez... 🍀</div>
+            result.postBonusDisplay ? (
+              <div className="win-details" style={{ color: 'var(--accent-purple)', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                ✊ Ganancia Moción de Procedimiento: +{(result.totalBonusWin || 0).toLocaleString('es-ES')} puntos
+              </div>
+            ) : (
+              <div className="win-details" style={{ color: 'var(--text-muted)' }}>Sin premio esta vez... 🍀</div>
+            )
           ) : spinning ? (
             <div className="win-details" style={{ color: 'var(--text-muted)' }}>Girando... 🎰</div>
           ) : (

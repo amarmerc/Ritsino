@@ -11,7 +11,7 @@ const SYMBOLS = {
   10: { id: 10, name: 'symbol_10', emoji: '💎', rarity: 'epic',      label: 'Diamante' },
   11: { id: 11, name: 'symbol_11', emoji: '👑', rarity: 'epic',      label: 'Corona' },
   12: { id: 12, name: 'symbol_12', emoji: '7️⃣', rarity: 'legendary', label: 'Siete' },
-  13: { id: 13, name: 'scatter',   emoji: '🎰', rarity: 'scatter',   label: 'Scatter' },
+  13: { id: 13, name: 'scatter',   emoji: '✊', rarity: 'scatter',   label: 'Scatter' },
 };
 
 const RARITY_COLORS = {
