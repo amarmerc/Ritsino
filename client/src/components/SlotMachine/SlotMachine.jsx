@@ -196,9 +196,10 @@ export default function SlotMachine() {
       {/* Bonus intro screen */}
       {bonusMode === 'intro' && (
         <div className="bonus-screen">
-          <div className="bonus-emoji">🎰</div>
-          <h2>¡SCATTER BONUS!</h2>
-          <p>10 tiradas especiales con marmotas 🦫</p>
+          <div className="bonus-emoji">✊</div>
+          <h2>YOU'VE BEEN</h2>
+          <h2>MOCION-DE-PROCEDIMENTED</h2>
+          <p>10 tiradas especiales ✊</p>
         </div>
       )}
 
@@ -215,8 +216,8 @@ export default function SlotMachine() {
       {/* Phase up banner */}
       {bonusMode === 'phaseUp' && phaseUpInfo && (
         <div className="phase-up-banner">
-          <h3>🦫 ¡FASE {phaseUpInfo.phase}! 🦫</h3>
-          <p>Marmotas ahora ×{phaseUpInfo.multiplier} · +10 tiradas</p>
+          <h3>✊ ¡FASE {phaseUpInfo.phase}! ✊</h3>
+          <p>Moción ×{phaseUpInfo.multiplier} · +10 tiradas</p>
         </div>
       )}
 
@@ -241,7 +242,7 @@ export default function SlotMachine() {
         {/* Bonus overlay */}
         {inBonus && bonusMode === 'playing' && currentBonusSpin && (
           <div className="bonus-overlay">
-            <div className="bonus-title">🎰 SCATTER BONUS</div>
+            <div className="bonus-title">✊ MOCIÓN DE PROCEDIMIENTO</div>
             <div className="bonus-info">
               <span className="bonus-phase-badge">FASE {currentBonusSpin.phase} · ×{currentBonusSpin.phase + 1}</span>
               <span>Tiradas: {currentBonusSpin.spinsLeft + 1}</span>
@@ -249,8 +250,8 @@ export default function SlotMachine() {
             </div>
             <div className="bonus-marmot-progress">
               {[0, 1, 2, 3].map(i => (
-                <div key={i} className={`marmot-dot ${i < currentBonusSpin.phaseMarmots ? 'filled' : ''}`}>
-                  {i < currentBonusSpin.phaseMarmots ? '🦫' : ''}
+                <div key={i} className={`marmot-dot ${i < currentBonusSpin.phaseMociones ? 'filled' : ''}`}>
+                  {i < currentBonusSpin.phaseMociones ? '✊' : ''}
                 </div>
               ))}
             </div>
@@ -279,11 +280,11 @@ export default function SlotMachine() {
               const posKey = `${col}-${row}`;
               const isWin = bonusWinPos.has(posKey);
 
-              if (cell.type === 'marmot') {
+              if (cell.type === 'mocion') {
                 return (
                   <div key={`${col}-${row}`} className={`slot-cell bonus-cell-marmot slot-cell-appear ${isWin ? 'winning' : ''}`}
                     style={{ animationDelay: `${col * 60 + row * 25}ms` }}>
-                    <span className="symbol-emoji">🦫</span>
+                    <span className="symbol-emoji">✊</span>
                   </div>
                 );
               }
@@ -357,10 +358,10 @@ export default function SlotMachine() {
       {inBonus && bonusMode === 'playing' && currentBonusSpin && currentBonusSpin.spinWin > 0 && (
         <div className="win-display win">
           <div className="win-amount">+{currentBonusSpin.spinWin.toLocaleString('es-ES')}</div>
-          {currentBonusSpin.marmotCount > 0 && (
+          {currentBonusSpin.mocionCount > 0 && (
             <div className="win-details">
-              🦫 ×{currentBonusSpin.marmotCount} marmota{currentBonusSpin.marmotCount > 1 ? 's' : ''} ·
-              {currentBonusSpin.totalScreenPoints} pts × {currentBonusSpin.phase + 1}^{currentBonusSpin.marmotCount}
+              ✊ ×{currentBonusSpin.mocionCount} moción{currentBonusSpin.mocionCount > 1 ? 'es' : ''} ·
+              {currentBonusSpin.totalScreenPoints} pts × {currentBonusSpin.phase + 1}^{currentBonusSpin.mocionCount}
             </div>
           )}
         </div>

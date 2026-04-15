@@ -24,7 +24,6 @@ const PAYOUTS = {
   rare:      { 4: 1,   6: 3,   8: 6,   12: 15 },
   epic:      { 4: 3,   6: 8,   8: 15,  12: 40 },
   legendary: { 4: 5,   6: 15,  8: 30,  12: 60 },
-  scatter:   { 3: 5,   4: 20,  5: 50 },
 };
 
 const GRID_COLS = 7;
@@ -33,14 +32,13 @@ const TOTAL_WEIGHT = SYMBOLS.reduce((s, sym) => s + sym.weight, 0);
 
 // === BONUS CONFIG ===
 const BONUS_CELLS = [
-  { type: 'points', mult: 0.1, weight: 22 },
-  { type: 'points', mult: 0.2, weight: 18 },
-  { type: 'points', mult: 0.5, weight: 10 },
-  { type: 'points', mult: 1,   weight: 5 },
-  { type: 'points', mult: 2,   weight: 2 },
-  { type: 'points', mult: 5,   weight: 1 },
-  { type: 'marmot', weight: 3 },
-  { type: 'empty',  weight: 30 },
+  { type: 'points', mult: 0.1, weight: 8 },
+  { type: 'points', mult: 0.2, weight: 5 },
+  { type: 'points', mult: 0.5, weight: 3 },
+  { type: 'points', mult: 1,   weight: 2 },
+  { type: 'points', mult: 2,   weight: 1 },
+  { type: 'mocion', weight: 2 },
+  { type: 'empty',  weight: 75 },
 ];
 const BONUS_TOTAL_W = BONUS_CELLS.reduce((s, c) => s + c.weight, 0);
 
@@ -120,12 +118,7 @@ function evaluateGrid(grid, betAmount) {
       totalWin += w;
     }
   }
-  const sc = countScatters(grid);
-  if (sc.count >= 3) {
-    const ss = SYMBOLS.find(s => s.rarity === 'scatter');
-    const m = getMultiplier('scatter', sc.count);
-    if (m > 0) { const w = Math.round(betAmount * m); wins.push({ symbolId: ss.id, symbolName: ss.name, rarity: 'scatter', count: sc.count, multiplier: m, winAmount: w, positions: sc.positions }); totalWin += w; }
-  }
+  // Scatter: no points, only triggers bonus (checked in spin())
   return { totalWin, wins };
 }
 
@@ -136,7 +129,7 @@ function pickBonusCell(betAmount) {
     r -= bc.weight;
     if (r <= 0) {
       if (bc.type === 'points') return { type: 'points', value: Math.round(betAmount * bc.mult) };
-      if (bc.type === 'marmot') return { type: 'marmot' };
+      if (bc.type === 'mocion') return { type: 'mocion' };
       return { type: 'empty', displayId: Math.ceil(Math.random() * 12) };
     }
   }
@@ -145,75 +138,71 @@ function pickBonusCell(betAmount) {
 
 function generateBonusGrid(betAmount) {
   const grid = [];
+  // No sticky — purely random placement, clusters are rare
   for (let c = 0; c < GRID_COLS; c++) {
     const col = [];
     for (let r = 0; r < GRID_ROWS; r++) {
-      if (r > 0 && col[r - 1].type === 'points' && Math.random() < 0.35) {
-        col.push({ ...col[r - 1] });
-      } else {
-        col.push(pickBonusCell(betAmount));
-      }
+      col.push(pickBonusCell(betAmount));
     }
     grid.push(col);
   }
-  for (let c = 1; c < GRID_COLS; c++)
-    for (let r = 0; r < GRID_ROWS; r++)
-      if (grid[c - 1][r].type === 'points' && Math.random() < 0.2)
-        grid[c][r] = { ...grid[c - 1][r] };
   return grid;
 }
 
 function evaluateBonusGrid(grid, phase) {
-  let totalPts = 0, marmots = 0;
-  const marmotPos = [], pointPos = [];
+  let mociones = 0;
+  const mocionPos = [];
+  for (let c = 0; c < GRID_COLS; c++)
+    for (let r = 0; r < GRID_ROWS; r++)
+      if (grid[c][r].type === 'mocion') { mociones++; mocionPos.push({ col: c, row: r }); }
+
+  // Always find clustered points first (min 4 adjacent)
+  let clusteredPts = 0;
+  const winPos = [];
+  const vis = Array.from({ length: GRID_COLS }, () => Array(GRID_ROWS).fill(false));
   for (let c = 0; c < GRID_COLS; c++)
     for (let r = 0; r < GRID_ROWS; r++) {
-      const cell = grid[c][r];
-      if (cell.type === 'points') { totalPts += cell.value; pointPos.push({ col: c, row: r }); }
-      else if (cell.type === 'marmot') { marmots++; marmotPos.push({ col: c, row: r }); }
-    }
-  let spinWin = 0;
-  const winPos = [];
-  if (marmots > 0) {
-    const phaseMult = phase + 1;
-    spinWin = totalPts * Math.pow(phaseMult, marmots);
-    winPos.push(...pointPos, ...marmotPos);
-  } else {
-    // Only clustered points pay
-    const vis = Array.from({ length: GRID_COLS }, () => Array(GRID_ROWS).fill(false));
-    for (let c = 0; c < GRID_COLS; c++)
-      for (let r = 0; r < GRID_ROWS; r++) {
-        if (vis[c][r] || grid[c][r].type !== 'points') { vis[c][r] = true; continue; }
-        const pos = []; let val = 0;
-        const q = [{ col: c, row: r }]; vis[c][r] = true;
-        while (q.length) {
-          const cur = q.shift(); pos.push(cur);
-          val += grid[cur.col][cur.row].value;
-          for (const [dc, dr] of [[0,-1],[0,1],[-1,0],[1,0]]) {
-            const nc = cur.col + dc, nr = cur.row + dr;
-            if (nc >= 0 && nc < GRID_COLS && nr >= 0 && nr < GRID_ROWS && !vis[nc][nr] && grid[nc][nr].type === 'points') {
-              vis[nc][nr] = true; q.push({ col: nc, row: nr });
-            }
+      if (vis[c][r] || grid[c][r].type !== 'points') { vis[c][r] = true; continue; }
+      const pos = []; let val = 0;
+      const q = [{ col: c, row: r }]; vis[c][r] = true;
+      while (q.length) {
+        const cur = q.shift(); pos.push(cur);
+        val += grid[cur.col][cur.row].value;
+        for (const [dc, dr] of [[0,-1],[0,1],[-1,0],[1,0]]) {
+          const nc = cur.col + dc, nr = cur.row + dr;
+          if (nc >= 0 && nc < GRID_COLS && nr >= 0 && nr < GRID_ROWS && !vis[nc][nr] && grid[nc][nr].type === 'points') {
+            vis[nc][nr] = true; q.push({ col: nc, row: nr });
           }
         }
-        if (pos.length >= 4) { spinWin += val; winPos.push(...pos); }
       }
+      if (pos.length >= 4) { clusteredPts += val; winPos.push(...pos); }
+    }
+
+  let spinWin = clusteredPts;
+  // Mocion multiplies only the clustered points (additive, not exponential)
+  if (mociones > 0 && clusteredPts > 0) {
+    const phaseMult = phase + 1; // phase 1→×2, 2→×3, etc.
+    spinWin = clusteredPts * phaseMult * mociones;
+    winPos.push(...mocionPos);
+  } else if (mociones > 0) {
+    // Mocion but no clusters — no points to collect
+    winPos.push(...mocionPos);
   }
-  return { spinWin: Math.round(spinWin), marmotCount: marmots, totalScreenPoints: totalPts, winningPositions: winPos, marmotPositions: marmotPos };
+  return { spinWin: Math.round(spinWin), mocionCount: mociones, totalScreenPoints: clusteredPts, winningPositions: winPos, mocionPositions: mocionPos };
 }
 
 function generateBonusSequence(betAmount) {
-  let phase = 1, spinsLeft = 10, phaseMarmots = 0, totalBonusWin = 0;
+  let phase = 1, spinsLeft = 10, phaseMociones = 0, totalBonusWin = 0;
   const spins = [];
   while (spinsLeft > 0) {
     spinsLeft--;
     const grid = generateBonusGrid(betAmount);
     const ev = evaluateBonusGrid(grid, phase);
     totalBonusWin += ev.spinWin;
-    phaseMarmots += ev.marmotCount;
-    const spinData = { grid, ...ev, phase, phaseMarmots, spinsLeft, totalBonusWin, phaseUp: false };
-    if (phaseMarmots >= 4 && phase < 4) {
-      phase++; phaseMarmots = 0; spinsLeft += 10;
+    phaseMociones += ev.mocionCount;
+    const spinData = { grid, ...ev, phase, phaseMociones, spinsLeft, totalBonusWin, phaseUp: false };
+    if (phaseMociones >= 4 && phase < 4) {
+      phase++; phaseMociones = 0; spinsLeft += 10;
       spinData.phaseUp = true; spinData.newPhase = phase; spinData.spinsLeft = spinsLeft;
     }
     spins.push(spinData);
