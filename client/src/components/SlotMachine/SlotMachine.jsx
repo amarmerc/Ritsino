@@ -37,6 +37,7 @@ export default function SlotMachine() {
   const [autoSpinning, setAutoSpinning] = useState(false);
   const [autoSpinsLeft, setAutoSpinsLeft] = useState(0);
   const [showAutoMenu, setShowAutoMenu] = useState(false);
+  const [autoSpeed, setAutoSpeed] = useState('normal'); // slow, normal, turbo
   const autoSpinRef = useRef(false);
   const spinningRef = useRef(false);
 
@@ -94,15 +95,15 @@ export default function SlotMachine() {
             setBonusIndex(0);
             setBonusCurrentSpin(null);
             setBonusMode('intro');
-          }, 3500);
+          }, 3500 * (autoSpeed === 'turbo' ? 0.4 : autoSpeed === 'slow' ? 1.5 : 1));
         }
-      }, 1000);
+      }, 1000 * (autoSpeed === 'turbo' ? 0.4 : autoSpeed === 'slow' ? 1.5 : 1));
     } catch (err) {
       clearInterval(spinInterval);
       setSpinning(false); spinningRef.current = false;
       setResult({ error: err.message }); stopAutoSpin();
     }
-  }, [betAmount, user, updatePoints, bonusMode]);
+  }, [betAmount, user, updatePoints, bonusMode, autoSpeed]);
 
   // Auto-spin loop
   useEffect(() => {
@@ -114,9 +115,9 @@ export default function SlotMachine() {
         setAutoSpinsLeft(prev => prev === Infinity ? Infinity : prev - 1);
         doSpin();
       }
-    }, 1500);
+    }, 1500 * (autoSpeed === 'turbo' ? 0.35 : autoSpeed === 'slow' ? 2 : 1));
     return () => clearTimeout(timer);
-  }, [autoSpinning, spinning, autoSpinsLeft, doSpin, user, betAmount, bonusMode]);
+  }, [autoSpinning, spinning, autoSpinsLeft, doSpin, user, betAmount, bonusMode, autoSpeed]);
 
   // Bonus auto-play
   useEffect(() => {
@@ -147,10 +148,10 @@ export default function SlotMachine() {
         } else {
           setBonusIndex(prev => prev + 1);
         }
-      }, 500); // 500ms of spinning animation
-    }, 1500); // time between spins
+      }, 500 * (autoSpeed === 'turbo' ? 0.35 : autoSpeed === 'slow' ? 2 : 1)); // adjust spin animation time
+    }, 1500 * (autoSpeed === 'turbo' ? 0.35 : autoSpeed === 'slow' ? 2 : 1)); // time between spins
     return () => clearTimeout(timer);
-  }, [bonusMode, bonusIndex, bonusSpins]);
+  }, [bonusMode, bonusIndex, bonusSpins, autoSpeed]);
 
   // Bonus intro auto-dismiss
   useEffect(() => {
@@ -359,6 +360,11 @@ export default function SlotMachine() {
                   disabled={spinning || !user || user.points < betAmount}>🔄 AUTO</button>
                 {showAutoMenu && (
                   <div className="auto-spin-menu">
+                    <div style={{ display: 'flex', gap: '4px', padding: '6px', borderBottom: '1px solid var(--border-glass)' }}>
+                      <button className={`btn-primary ${autoSpeed === 'slow' ? 'active' : ''}`} style={{ flex: 1, padding: '4px', fontSize: '0.9rem', opacity: autoSpeed === 'slow' ? 1 : 0.4 }} onClick={(e) => { e.stopPropagation(); setAutoSpeed('slow'); }}>🐢</button>
+                      <button className={`btn-primary ${autoSpeed === 'normal' ? 'active' : ''}`} style={{ flex: 1, padding: '4px', fontSize: '0.9rem', opacity: autoSpeed === 'normal' ? 1 : 0.4 }} onClick={(e) => { e.stopPropagation(); setAutoSpeed('normal'); }}>▶️</button>
+                      <button className={`btn-primary ${autoSpeed === 'turbo' ? 'active' : ''}`} style={{ flex: 1, padding: '4px', fontSize: '0.9rem', opacity: autoSpeed === 'turbo' ? 1 : 0.4 }} onClick={(e) => { e.stopPropagation(); setAutoSpeed('turbo'); }}>⚡</button>
+                    </div>
                     {AUTO_SPIN_OPTIONS.map(count => (
                       <button key={count} className="auto-spin-option" onClick={() => startAutoSpin(count)}>
                         {count === Infinity ? '∞ Infinito' : `${count} tiradas`}
