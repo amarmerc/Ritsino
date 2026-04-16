@@ -203,7 +203,7 @@ function evaluateBonusGrid(grid, phase) {
 }
 
 function generateBonusSequence(betAmount) {
-  let phase = 1, spinsLeft = 9, phaseMociones = 0, totalBonusWin = 0;
+  let phase = 1, spinsLeft = 10, phaseMociones = 0, totalBonusWin = 0;
   const spins = [];
   while (spinsLeft > 0) {
     spinsLeft--;
@@ -212,8 +212,8 @@ function generateBonusSequence(betAmount) {
     totalBonusWin += ev.spinWin;
     phaseMociones += ev.mocionCount;
     const spinData = { grid, ...ev, phase, phaseMociones, spinsLeft, totalBonusWin, phaseUp: false };
-    if (phaseMociones >= 4 && phase < 4) {
-      phase++; phaseMociones = 0; spinsLeft += 9;
+    if (phaseMociones >= 4 && phase < 3) {
+      phase++; phaseMociones = 0; spinsLeft += 10;
       spinData.phaseUp = true; spinData.newPhase = phase; spinData.spinsLeft = spinsLeft;
     }
     spins.push(spinData);

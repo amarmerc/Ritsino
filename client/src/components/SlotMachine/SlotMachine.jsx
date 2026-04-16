@@ -208,7 +208,7 @@ export default function SlotMachine() {
           <div className="bonus-emoji">✊</div>
           <h2>YOU'VE BEEN</h2>
           <h2>MOCION-DE-PROCEDIMENTED</h2>
-          <p>9 tiradas especiales ✊</p>
+          <p>10 tiradas especiales ✊</p>
         </div>
       )}
 
@@ -230,7 +230,7 @@ export default function SlotMachine() {
       {bonusMode === 'phaseUp' && phaseUpInfo && (
         <div className="phase-up-banner">
           <h3>✊ ¡FASE {phaseUpInfo.phase}! ✊</h3>
-          <p>Moción ×{phaseUpInfo.multiplier} · +9 tiradas</p>
+          <p>Moción ×{phaseUpInfo.multiplier} · +10 tiradas</p>
         </div>
       )}
 
