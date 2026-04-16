@@ -123,7 +123,7 @@ export default function SlotMachine() {
     if (bonusMode !== 'playing') return;
     if (bonusIndex >= bonusSpins.length) {
       setBonusMode('complete');
-      if (result) updatePoints(result.newPoints); // Apply the total final bonus points now
+      // The points will be applied when the user clicks 'continue' on the final screen
       return;
     }
     const timer = setTimeout(() => {
@@ -208,15 +208,19 @@ export default function SlotMachine() {
           <div className="bonus-emoji">✊</div>
           <h2>YOU'VE BEEN</h2>
           <h2>MOCION-DE-PROCEDIMENTED</h2>
-          <p>10 tiradas especiales ✊</p>
+          <p>9 tiradas especiales ✊</p>
         </div>
       )}
 
       {/* Bonus complete screen */}
       {bonusMode === 'complete' && (
-        <div className="bonus-screen" onClick={() => setBonusMode('none')}>
+        <div className="bonus-screen" onClick={() => {
+          setBonusMode('none');
+          setResult(prev => ({ ...prev, bonusTriggered: false, postBonusDisplay: true }));
+          if (result) updatePoints(result.newPoints); // NOW apply the total bonus points visually
+        }}>
           <div className="bonus-emoji">🎉</div>
-          <h2>¡BONUS COMPLETADO!</h2>
+          <h2>¡MOCIÓN APROBADA!</h2>
           <div className="bonus-total-win">+{bonusTotalWin.toLocaleString('es-ES')} puntos</div>
           <p>Pulsa para continuar</p>
         </div>
@@ -226,7 +230,7 @@ export default function SlotMachine() {
       {bonusMode === 'phaseUp' && phaseUpInfo && (
         <div className="phase-up-banner">
           <h3>✊ ¡FASE {phaseUpInfo.phase}! ✊</h3>
-          <p>Moción ×{phaseUpInfo.multiplier} · +10 tiradas</p>
+          <p>Moción ×{phaseUpInfo.multiplier} · +9 tiradas</p>
         </div>
       )}
 

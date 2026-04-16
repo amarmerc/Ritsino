@@ -37,7 +37,7 @@ const BONUS_CELLS = [
   { type: 'points', mult: 0.5, weight: 3 },
   { type: 'points', mult: 1,   weight: 2 },
   { type: 'points', mult: 2,   weight: 1 },
-  { type: 'mocion', weight: 1.3 },
+  { type: 'mocion', weight: 1.0 },
   { type: 'empty',  weight: 80 },
 ];
 const BONUS_TOTAL_W = BONUS_CELLS.reduce((s, c) => s + c.weight, 0);
@@ -53,13 +53,13 @@ function generateGrid() {
   for (let c = 0; c < GRID_COLS; c++) {
     const col = [];
     for (let r = 0; r < GRID_ROWS; r++) {
-      col.push(r > 0 && Math.random() < 0.30 ? col[r - 1] : pickSymbol());
+      col.push(r > 0 && Math.random() < 0.15 ? col[r - 1] : pickSymbol());
     }
     grid.push(col);
   }
   for (let c = 1; c < GRID_COLS; c++)
     for (let r = 0; r < GRID_ROWS; r++)
-      if (Math.random() < 0.15) grid[c][r] = grid[c - 1][r];
+      if (Math.random() < 0.08) grid[c][r] = grid[c - 1][r];
   return grid;
 }
 
@@ -203,7 +203,7 @@ function evaluateBonusGrid(grid, phase) {
 }
 
 function generateBonusSequence(betAmount) {
-  let phase = 1, spinsLeft = 10, phaseMociones = 0, totalBonusWin = 0;
+  let phase = 1, spinsLeft = 9, phaseMociones = 0, totalBonusWin = 0;
   const spins = [];
   while (spinsLeft > 0) {
     spinsLeft--;
@@ -213,7 +213,7 @@ function generateBonusSequence(betAmount) {
     phaseMociones += ev.mocionCount;
     const spinData = { grid, ...ev, phase, phaseMociones, spinsLeft, totalBonusWin, phaseUp: false };
     if (phaseMociones >= 4 && phase < 4) {
-      phase++; phaseMociones = 0; spinsLeft += 10;
+      phase++; phaseMociones = 0; spinsLeft += 9;
       spinData.phaseUp = true; spinData.newPhase = phase; spinData.spinsLeft = spinsLeft;
     }
     spins.push(spinData);
